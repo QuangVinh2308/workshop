@@ -7,9 +7,14 @@ pre : " <b> 2.2 </b> "
 ---
 
 In this step, you will create an **IAM role** that lets your EC2 instances connect to **AWS Systems Manager (SSM)**.  
-We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through **Session Manager**.
+No **SSH (22)** or **RDP (3389)** is required — all administration goes through **Session Manager**.
 
-> Result: an instance profile **`ps-ec2-ssm-role`** attached to your Launch Template **`lt-ps-app`**, so all ASG instances are SSM-managed by default.
+**Why this matters for Network Compliance & Audit Automation**
+- Enables **agent-based checks** and **auto-remediation** via SSM Automation runbooks.  
+- Provides an **auditable** control plane for actions taken on instances.  
+- Works with **AWS Config** / **Security Hub** to close the loop from finding → fix.
+
+**Result:** an instance profile **`ps-ec2-ssm-role`** attached to your Launch Template **`lt-ps-app`**, so all ASG instances are SSM-managed by default.
 
 ---
 
@@ -23,21 +28,20 @@ We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through
 
 2. Attach policies (least-privilege for SSM)  
    - **AmazonSSMManagedInstanceCore** *(required)*  
-   - **CloudWatchAgentServerPolicy** *(optional for metrics/logs)*  
-   - **Next**
+   - **CloudWatchAgentServerPolicy** *(optional, for metrics/logs)* → **Next**
 
 ![IAM](/images/2.prerequisite/045-iam-attach-policies.png)
 
 3. Name and create the role  
    - **Role name**: `ps-ec2-ssm-role`  
-   - (Optional) Tags: `Project=PS-Workshop`, `Role=App`  
+   - (Optional) Tags: `Compliance=Network`, `Owner=SecOps`, `Env=Dev/Prod`  
    - **Create role**
 
 ![IAM](/images/2.prerequisite/046-iam-name-role.png)
 
 4. Verify **Instance profile**  
-   - Open the role **`ps-ec2-ssm-role`** → tab **Instance profiles**  
-   - You should see an **instance profile with the same name** (used by EC2/Launch Template).
+   - Open role **`ps-ec2-ssm-role`** → tab **Instance profiles**  
+   - Confirm an **instance profile with the same name** exists (used by EC2/Launch Template).
 
 ![IAM](/images/2.prerequisite/047-iam-instance-profile.png)
 
@@ -51,4 +55,4 @@ We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through
 
 ![EC2](/images/2.prerequisite/048-lt-choose-instance-profile.png)
 
-
+> Tip: After your ASG launches instances with this profile, you can validate in **Systems Manager → Fleet Manager / Managed instances** (Managed = Yes, Ping = Online).
