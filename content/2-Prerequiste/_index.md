@@ -3,7 +3,7 @@ title : "Create IAM Role for SSM (EC2)"
 date : "`r Sys.Date()`"
 weight : 2
 chapter : false
-pre : " <b> 2. </b> "
+pre : " <b> 2.2 </b> "
 ---
 
 In this step, you will create an **IAM role** that lets your EC2 instances connect to **AWS Systems Manager (SSM)**.  
@@ -21,21 +21,32 @@ We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through
 
 ![IAM](/images/2.prerequisite/044-iam-create-role.png)
 
-2. Attach policies (least-privilege for SSM)
-   - **AmazonSSMManagedInstanceCore** *(required)*
+2. Attach policies (least-privilege for SSM)  
+   - **AmazonSSMManagedInstanceCore** *(required)*  
    - **CloudWatchAgentServerPolicy** *(optional for metrics/logs)*  
    - **Next**
 
 ![IAM](/images/2.prerequisite/045-iam-attach-policies.png)
 
-3. Name and create the role
+3. Name and create the role  
    - **Role name**: `ps-ec2-ssm-role`  
    - (Optional) Tags: `Project=PS-Workshop`, `Role=App`  
    - **Create role**
 
 ![IAM](/images/2.prerequisite/046-iam-name-role.png)
 
-4. Verify **Instance profile**
-   - Open the role `ps-ec2-ssm-role` → check **Instance profile** tab  
-   - You should see an instance pro
+4. Verify **Instance profile**  
+   - Open the role **`ps-ec2-ssm-role`** → tab **Instance profiles**  
+   - You should see an **instance profile with the same name** (used by EC2/Launch Template).
 
+![IAM](/images/2.prerequisite/047-iam-instance-profile.png)
+
+---
+
+### B) Attach the role to your Launch Template
+
+5. **EC2 → Launch Templates → `lt-ps-app` → Create new version**  
+   - **Advanced details → IAM instance profile**: select **`ps-ec2-ssm-role`**  
+   - Save as **new version** → (optional) **Set as default version**.
+
+![EC2](/images/2.prerequisite/048-lt-choose-instance-profile.png)
