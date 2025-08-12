@@ -47,3 +47,5 @@ To archive **Session Manager** logs centrally, we’ll add **S3 write permission
     }
   ]
 }
+```
+{{% /notice %}}
