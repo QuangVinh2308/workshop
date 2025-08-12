@@ -47,3 +47,5 @@ pre : " <b> 3.2.2.1 </b> "
 
 {{% notice tip %}}
 Repeat similar steps for **`ssmmessages`** and **`ec2messages`** endpoints to com
+{{% /notice %}}
+
