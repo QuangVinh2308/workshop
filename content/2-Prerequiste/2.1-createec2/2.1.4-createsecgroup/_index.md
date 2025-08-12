@@ -1,81 +1,99 @@
 ---
-title : "Create security groups"
+title : "Create Security Groups (ALB ↔ App ↔ SSM Endpoints)"
 date : "`r Sys.Date()`"
 weight : 4
 chapter : false
 pre : " <b> 2.1.4 </b> "
 ---
 
-#### Create security groups
+#### Create Security Groups
 
-In this step, we will proceed to create the security groups used for our instances. As you can see, these security groups will not need to open traditional ports to **ssh** like port **22** or **remote desktop** through port **3389**.
+In this step, you will create **least-privilege** security groups for the Predictive Scaling baseline.  
+We will **not** open traditional admin ports like **SSH (22)** or **RDP (3389)**. Operations will go through **AWS Systems Manager (Session Manager)**.
 
-#### Create security group for Linux instance located in public subnet
+---
 
-1. Go to [VPC service management console](https://console.aws.amazon.com/vpc)
-  + Click **Security Group**.
-  + Click **Create security group**.
+#### A) Security group for the Application Load Balancer (public)
+
+1) Go to **VPC → Security groups** → **Create security group**  
+   - **Security group name**: `sg-alb-public`  
+   - **Description**: ALB in public subnets  
+   - **VPC**: `workshop-ps-vpc`  
+   - Keep default **Outbound** = Allow all → **Create security group**.
 
 ![SG](/images/2.prerequisite/019-createsg.png)
 
-3. In the **Security group name** field, enter **SG Public Linux Instance**.
-  + In the **Description** section, enter **SG Public Linux Instance**.
-  + In the **VPC** section, click the **X** to reselect the **Lab VPC** you created for this lab.
+2) Add **Inbound rules** to expose ALB to the Internet  
+   - **HTTP** `80` from `0.0.0.0/0`  
+   - **HTTPS** `443` from `0.0.0.0/0`  
+   - **Save rules**.
 
 ![SG](/images/2.prerequisite/020-createsg.png)
 
-4. Keep **Outbound rule**, drag the mouse to the bottom.
-  + Click **Create security group**.
+> The ALB terminates client traffic on 80/443 and forwards to app targets in private subnets.
 
-{{%notice tip%}}
-As you can see, the security group we created to use for Linux public instances will not need to open traditional ports to **ssh** like port **22**.
-{{%/notice%}}
+---
 
+#### B) Security group for App instances (ASG in private subnets)
 
-#### Create a security group for a Windows instance located in a private subnet
-
-1. After successfully creating a security group for the Linux instance located in the public subnet, click the Security Groups link to return to the Security groups list.
+1) **Create security group**  
+   - **Security group name**: `sg-app-asg`  
+   - **Description**: App instances behind ALB (Auto Scaling Group)  
+   - **VPC**: `workshop-ps-vpc`  
+   - Keep **Outbound** = Allow all (needed for OS updates, ECR pulls, and SSM).  
+   - **Create security group**.
 
 ![SG](/images/2.prerequisite/021-createsg.png)
 
-2. Click **Create security group**.
-
-3. In the **Security group name** field, enter **SG Private Windows Instance**.
-  + In the **Description** section, enter **SG Private Windows Instance**.
-  + In the **VPC** section, click the **X** to reselect the **Lab VPC** you created for this lab.
+2) Add **Inbound rule** to accept traffic **only from the ALB SG**  
+   - **Type**: HTTP (or your app port) `80`  
+   - **Source**: `sg-alb-public` (select by SG ID)  
+   - **Save rules**.
 
 ![SG](/images/2.prerequisite/022-createsg.png)
 
-4. Scroll down.
-  + Add **Outbound rule** to allow TCP 443 connection to 10.10.0.0/16 ( CIDR of **Lab VPC** we created)
-  + Click **Create security group**.
+{{%notice tip%}}
+No inbound **22/3389**. For admin access, use **Session Manager** via VPC Interface Endpoints. This keeps private instances **not exposed** to the Internet — a must for stable, proactive scaling.
+{{%/notice%}}
+
+---
+
+#### C) Security group for **VPC Interface Endpoints (SSM)**
+
+We’ll restrict endpoint access to **only** our app instances.
+
+1) **Create security group**  
+   - **Security group name**: `sg-ssm-endpoints`  
+   - **Description**: SSM VPC endpoints (ssm, ssmmessages, ec2messages)  
+   - **VPC**: `workshop-ps-vpc`  
+   - **Outbound**: none required → keep default or set to none.
 
 ![SG](/images/2.prerequisite/023-createsg.png)
 
-{{%notice tip%}}
-For the Instance in the private subnet, we will connect to the **Session Manager** endpoint over a TLS encrypted connection, so we need to allow outbound connection from our instance to VPC CIDR through port 443.
-{{%/notice%}}
-
-
-#### Create security group for VPC Endpoint
-
-1. In this step, we will create security group for VPC Endpoint of **Session Manager**.
-2. After successfully creating the security group for the Windows instance in the private subnet, click the Security Groups link to return to the Security groups list.
-3. Click **Create security group**.
-4. In the **Security group name** field, enter **SG VPC Endpoint**.
-  + In the **Description** section, enter **SG VPC Endpoint**.
-  + In the **VPC** section, click the **X** to reselect the **Lab VPC** you created for this lab.
+2) Add **Inbound rule** to allow TLS from app instances  
+   - **Type**: HTTPS `443`  
+   - **Source**: `sg-app-asg` (select by SG ID)  
+   - **Save rules**.
 
 ![SG](/images/2.prerequisite/024-createsg.png)
 
-5. Scroll down.
-  + Delete **Outbound rule**.
-  
+---
+
+#### D) Attach SGs to resources
+
+- **ALB (public subnets)** → `sg-alb-public`  
+- **ASG Launch Template (private subnets)** → `sg-app-asg`  
+- **VPC Interface Endpoints** (`ssm`, `ssmmessages`, `ec2messages`) → `sg-ssm-endpoints`
+
 ![SG](/images/2.prerequisite/025-createsg.png)
 
-6. Add **Inbound rule** allowing TCP 443 to come from 10.10.0.0/16 ( CIDR of **Lab VPC** we created ).
-  + Click **Create security group**.
+---
+
+#### Validate
+
+- ✅ No inbound **SSH (22)** or **RDP (3389)** on app instances  
+- ✅ ALB reachable on **80/443** from the Internet  
+- ✅ App instances accept traffic **only from ALB SG** on app port  
+- ✅ SSM VPC endpoints allow **443** from `sg-app-asg` only
 
 ![SG](/images/2.prerequisite/026-createsg.png)
-
-So we are done creating the necessary security groups for EC2 instances and VPC Endpoints.
