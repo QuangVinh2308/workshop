@@ -6,70 +6,70 @@ chapter: false
 pre    : " <b> 2.1 </b> "
 ---
 
-Mục tiêu: đảm bảo **AWS Config** đang **ghi nhận (recording)** toàn bộ tài nguyên **network** và đang **đánh giá (evaluate)** theo rule/conformance pack để tự động phát hiện + khắc phục lệch chuẩn.
+Goal: ensure **AWS Config** is **recording** all **network** resources and **evaluating** them against rules/conformance packs to automatically detect and remediate drift.
 
 ---
 
-### A) Kiểm tra AWS Config đang bật
-1. Mở **AWS Config Console** → **Dashboard**  
-2. Nếu thấy **Get started**:  
-   - **Record all resources** (khuyến nghị) + **Include global resources**  
-   - **S3 bucket** để lưu snapshot/delivery (tạo mới hoặc chọn sẵn)  
-   - (Optional) **SNS** để bắn thông báo  
-   - **Confirm** để bật
-3. Nếu đã bật: đảm bảo **Recording = On** và có **Delivery channel** hợp lệ.  
+### A) Verify AWS Config is enabled
+1. Open **AWS Config Console** → **Dashboard**  
+2. If you see **Get started**:  
+   - Choose **Record all resources** (recommended) + **Include global resources**  
+   - Select an **S3 bucket** for snapshots/delivery (create new or pick existing)  
+   - (Optional) **SNS** for notifications  
+   - Click **Confirm** to enable
+3. If already enabled: make sure **Recording = On** and there is a valid **Delivery channel**.
 
 ![Config](/images/2.compliance/001-config-dashboard.png)
 
-> Tip: để chuẩn hoá theo team, đặt bucket/KMS riêng cho **compliance**.
+> Tip: for team standardization, dedicate a bucket/KMS for **compliance**.
 
 ---
 
-### B) Đảm bảo record **network resource types**
-Vào **Settings → Recorders** và confirm các loại sau **đang được record**:
+### B) Ensure **network resource types** are recorded
+Go to **Settings → Recorders** and confirm these types are **being recorded**:
 - **VPC, Subnet, RouteTable, InternetGateway, NATGateway, VpcEndpoint**  
 - **SecurityGroup, NetworkAcl, NetworkInterface**  
-- **Elastic IP, Load Balancer/Target Group**  
+- **Elastic IP, Load Balancer/Target Group**
 
 ![Config](/images/2.compliance/002-config-recorder-types.png)
 
 ---
 
-### C) Kiểm tra **Managed Rules** về network
-Vào **Rules** → lọc theo **AWS managed** và kiểm tra các nhóm rule phổ biến:
-- **Security Groups**: **không mở 0.0.0.0/0** cho cổng nhạy cảm (SSH/RDP/ports phổ biến)  
-- **Default SG**: không cho phép inbound/outbound không giới hạn  
-- **VPC Flow Logs**: được bật cho VPC/Subnet (tuỳ chuẩn)  
-- **Load Balancer**: listener **HTTPS** bắt buộc (tuỳ yêu cầu), health checks hợp lệ  
-- **Endpoints/NAT/IGW**: cấu hình theo policy nội bộ
+### C) Check **Managed Rules** for networking
+Open **Rules** → filter by **AWS managed** and review common rule groups:
+- **Security Groups**: do **not** allow **0.0.0.0/0** on sensitive ports (SSH/RDP/common ports)  
+- **Default SG**: no unrestricted inbound/outbound  
+- **VPC Flow Logs**: enabled for VPC/Subnet (per standard)  
+- **Load Balancer**: **HTTPS** listener required (as needed), valid health checks  
+- **Endpoints/NAT/IGW**: configured per internal policy
 
-Nếu thiếu, **Add rule** ngay các rule networking bạn dùng.
+If missing, **Add rule** for the networking rules you use.
 
 ![Config](/images/2.compliance/003-config-rules-network.png)
 
 {{% notice tip %}}
-Muốn “đánh theo bộ”, dùng **Conformance Pack** “**Operational Best Practices for Amazon VPC**” hoặc pack tuỳ framework (SOC 2 / PCI DSS / HIPAA).
+If you want a “packaged” setup, use the **Conformance Pack** **“Operational Best Practices for Amazon VPC”** or a pack aligned to your framework (SOC 2 / PCI DSS / HIPAA).
 {{% /notice %}}
 
 ---
 
-### D) (Optional) Deploy **Conformance Pack** cho network
+### D) (Optional) Deploy a **Conformance Pack** for networking
 1. **Conformance packs → Deploy pack**  
-2. Chọn mẫu (ví dụ: *Operational Best Practices for Amazon VPC*)  
-3. Review tham số → **Deploy**
+2. Pick a template (e.g., *Operational Best Practices for Amazon VPC*)  
+3. Review parameters → **Deploy**
 
 ![Config](/images/2.compliance/004-config-conformance-pack.png)
 
 ---
 
-### E) Xem kết quả & xác nhận
-- **Compliance summary**: Pass/Noncompliant/Not evaluated theo **Rule** & **Resource**  
-- Drill-down 1 rule bất kỳ → xem tài nguyên **Noncompliant** + **fix** gợi ý  
-- Ghi nhận baseline để so sánh sau này (báo cáo xu hướng)
+### E) Review results & confirm
+- **Compliance summary**: Pass/Noncompliant/Not evaluated by **Rule** & **Resource**  
+- Drill into any rule → see **Noncompliant** resources + suggested **fix**  
+- Capture a baseline to compare later (trend reporting)
 
 ![Config](/images/2.compliance/005-config-compliance-summary.png)
 
-> Kết nối tiếp theo: **[2.1.2 – Enable Recording for Network Resource Types](2.1.2-enable-network-types/)** & **[2.1.3 – Check Managed Rules (Networking)](2.1.3-check-managed-rules/)** để đi chi tiết theo từng màn hình.
+> Next steps: **[2.1.2 – Enable Recording for Network Resource Types](2.1.2-enable-network-types/)** & **[2.1.3 – Check Managed Rules (Networking)](2.1.3-check-managed-rules/)** for detailed console walkthroughs.
 
 ---
 
