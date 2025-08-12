@@ -1,9 +1,9 @@
 ---
 title : "Create Auto Scaling Group behind ALB"
 date : "`r Sys.Date()`"
-weight : 6
+weight : 1
 chapter : false
-pre : " <b> 2.1.6 </b> "
+pre : " <b> 2.1 </b> "
 ---
 
 In this step, you will place your application instances (from **Launch Template `lt-ps-app`**) behind an **Application Load Balancer (ALB)** and manage them with an **Auto Scaling Group (ASG)** in **private subnets**.  
@@ -80,3 +80,4 @@ This is the final baseline before we enable **ML Predictive Scaling**.
 > Why this matters: Having ALB+ASG across two AZs with warm-up configured gives the ML model a stable baseline. Predictive Scaling will then forecast demand and scale **before** traffic spikes to keep latency smooth.
 
 **Next:** We’ll enable **Predictive Scaling** on this ASG and tune metrics/warm-up in the scaling policy.
+
