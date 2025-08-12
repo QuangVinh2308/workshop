@@ -1,3 +1,4 @@
+
 ---
 title : "Create VPC Endpoints for Session Manager"
 date : "`r Sys.Date()`"
