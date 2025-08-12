@@ -1,21 +1,40 @@
 ---
-title : "Preparation "
+title : "Create IAM Role for SSM (EC2)"
 date : "`r Sys.Date()`"
 weight : 2
 chapter : false
-pre : " <b> 2. </b> "
+pre : " <b> 2.2 </b> "
 ---
 
-{{% notice info %}}
-You need to create 1 Linux instance on the public subnet and 1 Window instance on the private subnet to perform this lab.
-{{% /notice %}}
+In this step, you will create an **IAM role** that lets your EC2 instances connect to **AWS Systems Manager (SSM)**.  
+We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through **Session Manager**.
 
-To learn how to create EC2 instances and VPCs with public/private subnets, you can refer to the lab:
-  - [About Amazon EC2](https://000004.awsstudygroup.com/en/)
-  - [Works with Amazon VPC](https://000003.awsstudygroup.com/en/)
+> Result: an instance profile **`ps-ec2-ssm-role`** attached to your Launch Template **`lt-ps-app`**, so all ASG instances are SSM-managed by default.
 
-In order to use System Manager to manage our window instances in particular and our instances in general on AWS, we need to give permission to our instances to be able to work with System Manager. In this preparation, we will also proceed to create an IAM Role to grant permissions to instances that can work with System Manager.
+---
 
-### Content
-  - [Prepare VPC and EC2](2.1-createec2/)
-  - [Create IAM Role](2.2-createiamrole/)
+### A) Create the IAM Role
+
+1. Open **IAM → Roles → Create role**  
+   - **Trusted entity type**: **AWS service**  
+   - **Use case**: **EC2** → **Next**
+
+![IAM](/images/2.prerequisite/044-iam-create-role.png)
+
+2. Attach policies (least-privilege for SSM)
+   - **AmazonSSMManagedInstanceCore** *(required)*
+   - **CloudWatchAgentServerPolicy** *(optional for metrics/logs)*  
+   - **Next**
+
+![IAM](/images/2.prerequisite/045-iam-attach-policies.png)
+
+3. Name and create the role
+   - **Role name**: `ps-ec2-ssm-role`  
+   - (Optional) Tags: `Project=PS-Workshop`, `Role=App`  
+   - **Create role**
+
+![IAM](/images/2.prerequisite/046-iam-name-role.png)
+
+4. Verify **Instance profile**
+   - Open the role `ps-ec2-ssm-role` → check **Instance profile** tab  
+   - You should see an instance pro
