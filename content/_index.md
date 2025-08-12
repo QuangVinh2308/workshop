@@ -4,7 +4,7 @@ date :  "`r Sys.Date()`"
 weight : 1 
 chapter : false
 ---
-# Work with Amazon System Manager - Session Manager
+# Building Auto Scaling Groups and Machine Learning Predictive Scaling
 
 ### Overall
  In this lab, you'll learn the basics and practice of Amazon  System Manager - Session Manager
@@ -19,3 +19,4 @@ chapter : false
  4. [Manage session logs](4-s3log/)
  5. [Port Forwarding](5-Portfwd/)
  6. [Clean up resources](6-cleanup/)
+
