@@ -1,84 +1,83 @@
 ---
-title : "Create Auto Scaling Group behind ALB"
-date : "`r Sys.Date()`"
-weight : 1
-chapter : false
-pre : " <b> 2.1 </b> "
+title : "Verify AWS Config & Rules Status"
+date  : "`r Sys.Date()`"
+weight: 1
+chapter: false
+pre    : " <b> 2.1 </b> "
 ---
 
-In this step, you will place your application instances (from **Launch Template `lt-ps-app`**) behind an **Application Load Balancer (ALB)** and manage them with an **Auto Scaling Group (ASG)** in **private subnets**.  
-This is the final baseline before we enable **ML Predictive Scaling**.
-
----
-
-### A) Create the Application Load Balancer (public)
-1. EC2 Console → **Load Balancers** → **Create load balancer**
-   - **Type**: Application Load Balancer
-   - **Name**: `alb-ps`
-   - **Scheme**: Internet-facing; **IP address type**: IPv4
-   - **VPC**: `workshop-ps-vpc`
-   - **Mappings**: select **ps-public-a** and **ps-public-b**
-
-![ALB](/images/2.prerequisite/035-create-alb.png)
-
-2. **Security groups & Listeners**
-   - **Security groups**: `sg-alb-public`
-   - **Listener**: HTTP :80 → **Forward** to target group `tg-ps-app`
-   - *(Optional)* Add HTTPS :443 later when ACM cert is ready.
-
-![ALB](/images/2.prerequisite/036-alb-security.png)
-![ALB](/images/2.prerequisite/037-tg-attach.png)
+Mục tiêu: đảm bảo **AWS Config** đang **ghi nhận (recording)** toàn bộ tài nguyên **network** và đang **đánh giá (evaluate)** theo rule/conformance pack để tự động phát hiện + khắc phục lệch chuẩn.
 
 ---
 
-### B) Create the Auto Scaling Group (private)
-1. EC2 Console → **Auto Scaling Groups** → **Create**
-   - **ASG name**: `asg-ps-app`
-   - **Launch template**: `lt-ps-app` (v1)
-   - **VPC and subnets**: choose **ps-private-a** and **ps-private-b**
+### A) Kiểm tra AWS Config đang bật
+1. Mở **AWS Config Console** → **Dashboard**  
+2. Nếu thấy **Get started**:  
+   - **Record all resources** (khuyến nghị) + **Include global resources**  
+   - **S3 bucket** để lưu snapshot/delivery (tạo mới hoặc chọn sẵn)  
+   - (Optional) **SNS** để bắn thông báo  
+   - **Confirm** để bật
+3. Nếu đã bật: đảm bảo **Recording = On** và có **Delivery channel** hợp lệ.  
 
-![ASG](/images/2.prerequisite/038-create-asg.png)
+![Config](/images/2.compliance/001-config-dashboard.png)
 
-2. **Load balancing & health checks**
-   - Attach to **Application Load Balancer**
-   - **Target group**: `tg-ps-app`
-   - **Health check type**: **ELB** (recommended)
-
-![ASG](/images/2.prerequisite/039-asg-loadbalancing.png)
-
-3. **Capacity & warm-up**
-   - **Desired**: `2` (example)
-   - **Minimum**: `2` (keeps both AZs warm)
-   - **Maximum**: `6` (example)
-   - **Default instance warm-up**: `300` seconds
-
-![ASG](/images/2.prerequisite/040-asg-capacity.png)
-
-4. **Scaling policies (baseline)**
-   - Choose **Target tracking scaling policy**
-   - **Metric**: `ALB RequestCountPerTarget` (or `CPUUtilization`)
-   - **Target value**: e.g., `100` requests/target (adjust later)
-   - *(Predictive Scaling will be enabled in the next section.)*
-
-![ASG](/images/2.prerequisite/041-asg-scaling.png)
-
-5. **Review & create ASG**
-   - Confirm: private subnets, `tg-ps-app` attached, **ELB health check**, warm-up set.
-   - **Create Auto Scaling group**
-
-![ASG](/images/2.prerequisite/042-asg-review.png)
+> Tip: để chuẩn hoá theo team, đặt bucket/KMS riêng cho **compliance**.
 
 ---
 
-### C) Validate
-- **Target Groups → `tg-ps-app`**: targets become **healthy (2/2)** after a few minutes.
-- **Load Balancers → `alb-ps`**: copy the **DNS name** and open it in a browser; you should see the hello page from user data.
-- No inbound **22/3389** on app instances; admin goes via **Session Manager**.
+### B) Đảm bảo record **network resource types**
+Vào **Settings → Recorders** và confirm các loại sau **đang được record**:
+- **VPC, Subnet, RouteTable, InternetGateway, NATGateway, VpcEndpoint**  
+- **SecurityGroup, NetworkAcl, NetworkInterface**  
+- **Elastic IP, Load Balancer/Target Group**  
 
-![Validate](/images/2.prerequisite/043-validate-alb.png)
+![Config](/images/2.compliance/002-config-recorder-types.png)
 
-> Why this matters: Having ALB+ASG across two AZs with warm-up configured gives the ML model a stable baseline. Predictive Scaling will then forecast demand and scale **before** traffic spikes to keep latency smooth.
+---
 
-**Next:** We’ll enable **Predictive Scaling** on this ASG and tune metrics/warm-up in the scaling policy.
+### C) Kiểm tra **Managed Rules** về network
+Vào **Rules** → lọc theo **AWS managed** và kiểm tra các nhóm rule phổ biến:
+- **Security Groups**: **không mở 0.0.0.0/0** cho cổng nhạy cảm (SSH/RDP/ports phổ biến)  
+- **Default SG**: không cho phép inbound/outbound không giới hạn  
+- **VPC Flow Logs**: được bật cho VPC/Subnet (tuỳ chuẩn)  
+- **Load Balancer**: listener **HTTPS** bắt buộc (tuỳ yêu cầu), health checks hợp lệ  
+- **Endpoints/NAT/IGW**: cấu hình theo policy nội bộ
 
+Nếu thiếu, **Add rule** ngay các rule networking bạn dùng.
 
+![Config](/images/2.compliance/003-config-rules-network.png)
+
+{{% notice tip %}}
+Muốn “đánh theo bộ”, dùng **Conformance Pack** “**Operational Best Practices for Amazon VPC**” hoặc pack tuỳ framework (SOC 2 / PCI DSS / HIPAA).
+{{% /notice %}}
+
+---
+
+### D) (Optional) Deploy **Conformance Pack** cho network
+1. **Conformance packs → Deploy pack**  
+2. Chọn mẫu (ví dụ: *Operational Best Practices for Amazon VPC*)  
+3. Review tham số → **Deploy**
+
+![Config](/images/2.compliance/004-config-conformance-pack.png)
+
+---
+
+### E) Xem kết quả & xác nhận
+- **Compliance summary**: Pass/Noncompliant/Not evaluated theo **Rule** & **Resource**  
+- Drill-down 1 rule bất kỳ → xem tài nguyên **Noncompliant** + **fix** gợi ý  
+- Ghi nhận baseline để so sánh sau này (báo cáo xu hướng)
+
+![Config](/images/2.compliance/005-config-compliance-summary.png)
+
+> Kết nối tiếp theo: **[2.1.2 – Enable Recording for Network Resource Types](2.1.2-enable-network-types/)** & **[2.1.3 – Check Managed Rules (Networking)](2.1.3-check-managed-rules/)** để đi chi tiết theo từng màn hình.
+
+---
+
+### Content
+- [Verify Config Recorder & Delivery Channel](2.1.1-verify-config-recorder/)
+- [Enable Recording for Network Resource Types](2.1.2-enable-network-types/)
+- [Check Managed Rules (Networking)](2.1.3-check-managed-rules/)
+- [Deploy Network Conformance Pack (Optional)](2.1.4-deploy-conformance-pack/)
+- [Set Auto-Remediation with SSM Automation](2.1.5-auto-remediation-ssm/)
+- [Configure Config Aggregator (Multi-Account/Region)](2.1.6-config-aggregator/)
+- [Notifications & Reporting (EventBridge/SNS)](2.1.7-notifications-reporting/)
