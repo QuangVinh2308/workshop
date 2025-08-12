@@ -46,6 +46,11 @@ pre : " <b> 3.2.2.1 </b> "
 ![Connect](/images/3.connect/016-endpoint-done.png)
 
 {{% notice tip %}}
-Repeat similar steps for **`ssmmessages`** and **`ec2messages`** endpoints to com
+Repeat these steps to create **Interface** endpoints for:
+
+- `com.amazonaws.<region>.ssmmessages`
+- `com.amazonaws.<region>.ec2messages`
+
+Keep **Private DNS** enabled and reuse **sg-ssm-endpoints**.
 {{% /notice %}}
 
