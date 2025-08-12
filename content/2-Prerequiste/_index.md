@@ -3,7 +3,7 @@ title : "Create IAM Role for SSM (EC2)"
 date : "`r Sys.Date()`"
 weight : 2
 chapter : false
-pre : " <b> 2.2 </b> "
+pre : " <b> 2. </b> "
 ---
 
 In this step, you will create an **IAM role** that lets your EC2 instances connect to **AWS Systems Manager (SSM)**.  
@@ -38,3 +38,4 @@ We avoid opening **SSH (22)** or **RDP (3389)**. All administration goes through
 4. Verify **Instance profile**
    - Open the role `ps-ec2-ssm-role` → check **Instance profile** tab  
    - You should see an instance pro
+
