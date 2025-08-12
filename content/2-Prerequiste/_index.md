@@ -3,7 +3,7 @@ title : "Create IAM Role for SSM (EC2)"
 date : "`r Sys.Date()`"
 weight : 2
 chapter : false
-pre : " <b> 2.2 </b> "
+pre : " <b> 2. </b> "
 ---
 
 In this step, you will create an **IAM role** that lets your EC2 instances connect to **AWS Systems Manager (SSM)**.  
@@ -56,3 +56,4 @@ No **SSH (22)** or **RDP (3389)** is required — all administration goes throug
 ![EC2](/images/2.prerequisite/048-lt-choose-instance-profile.png)
 
 > Tip: After your ASG launches instances with this profile, you can validate in **Systems Manager → Fleet Manager / Managed instances** (Managed = Yes, Ping = Online).
+
