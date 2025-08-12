@@ -1,63 +1,59 @@
 ---
-title : "Create Private Instance"
+title : "Configure AWS Config Aggregator (Multi-Account/Region)"
 date : "`r Sys.Date()`"
 weight : 6
 chapter : false
 pre : " <b> 2.1.6 </b> "
 ---
 
-1. Go to [EC2 service management console](https://console.aws.amazon.com/ec2/v2/home)
-  + Click **Instances**.
-  + Click **Launch instances**.
-  
-2. On the **Step 1: Choose an Amazon Machine Image (AMI)** page.
-  + Drag the mouse down.
-  + Click **Select** to select AMI **Microsoft Windows Server 2019 Base**.
-  
-![EC2](/images/2.prerequisite/034-createec2.png)
+Stand up **AWS Config Aggregator** to get a **single-pane** view of network compliance (VPC/Subnet/RouteTable/IGW/NAT/VPC Endpoints/SG/NACL/ELB…) **across accounts & regions**. Đây là mảnh ghép chốt hạ cho **Network Compliance & Audit Automation**.
 
-3. On the **Step 2: Choose an Instance Type** page.
- + Click on Instance type **t2.micro**.
- + Click **Next: Configure Instance Details**.
- 
-![EC2](/images/2.prerequisite/029-createec2.png)
+> Kết quả: bạn xem **Compliance Summary** toàn Org, lọc theo **framework/tag**, drill-down chi tiết vi phạm và status của từng rule.
 
-4. At **Step 3: Configure Instance Details** page
-  + In the **Network** section, select **Lab VPC**.
-  + In the **Subnet** section, select **Lab Private Subnet**.
-  + At **Auto-assign Public IP** select **Use subnet setting (Disable)**
-  + Click **Next: Add Storage**.
+---
 
-![EC2](/images/2.prerequisite/035-createec2.png)
+## A) Create an Aggregator (Console)
 
-5. Click **Next: Add Tags** to move to the next step.
-  + Click **Next: Configure Security Group** to move to the next step.
+1. Mở **AWS Config** → **Aggregators** → **Add aggregator**  
+2. **Name**: `network-compliance-agg`
+3. **Source accounts**:
+   - Nếu dùng **AWS Organizations** (khuyến nghị): chọn **Aggregate data sources from an organization**  
+     - Bật **Trusted access** cho AWS Config trong Organizations (nếu chưa)  
+     - Chọn **All accounts** (hoặc OU cụ thể)
+   - Hoặc **Specific accounts**: nhập danh sách Account IDs thủ công
+4. **Regions**:
+   - Chọn **All regions** (khuyến nghị) để bắt đầy đủ drift đa vùng
+   - Tick **Include global resources** (IAM, v.v.)
+5. **Permissions**: dùng role được gợi ý (service-linked) hoặc chọn role sẵn có theo chuẩn least-privilege của bạn
+6. **Create aggregator** → đợi trạng thái **Complete**
 
+> Tip: đặt aggregator này ở **security/audit account** để tách biệt nhiệm vụ giám sát với workload account.
 
-6. On page **Step 6: Configure Security Group**.
-  + Select **Select an existing security group**.
-  + Select security group **SG Private Windows Instance**.
-  + Click **Review and Launch**.
+---
 
-![EC2](/images/2.prerequisite/036-createec2.png)
+## B) Verify & Explore
 
-7. The warning dialog box appears because we do not configure the firewall to allow connections to port 22, Click **Continue** to continue.
+- Vào **Aggregators → network-compliance-agg**  
+  - Tab **Compliance**: tổng quan Pass/Fail/Not evaluated theo **rule/conformance pack**  
+  - **Filters**: lọc theo **Account**, **Region**, **Resource type** (VPC, Subnet, RouteTable, SG, …)  
+  - Nhấn vào 1 rule (ví dụ *restricted-ssh*) để xem **non-compliant resources** và chi tiết drift
+- Đảm bảo các rule/network packs ở bước 2.1.3–2.1.4 đã có dữ liệu trong aggregator
 
-8. At page **Step 7: Review Instance Launch**.
-  + Click **Launch**.
+---
 
-9. In the **Select an existing key pair or create a new key pair** dialog box.
-  + Click **Choose an existing key pair**.
-  + In the **Key pair name** section, select **LabKeypair**.
-  + Click **I acknowledge that I have access to the corresponding private key file, and that without this file, I won't be able to log into my instance.**.
-  + Click **Launch Instances** to create EC2 server.
+## C) (Optional) Wire-up Notifications & Reports
 
-10. Click **View Instances** to return to the list of EC2 instances.
+- **EventBridge**: match `Config Rules Compliance Change` → **SNS/ChatOps** (Slack/MSTeams)  
+- **Athena + S3**: query lịch sử compliance, feed **QuickSight** dashboard (xu hướng theo thời gian, top lỗi)
 
-11. Click the edit icon under the **Name** column.
-  + In the **Edit Name** dialog box, enter **Private Windows Instance**.
-  + Click **Save**.
+---
 
-![EC2](/images/2.prerequisite/033-createec2.png)
+## D) Clean Naming & Tags
 
-Next, we will proceed to create IAM Roles to serve the Session Manager.
+- Tag aggregator & rules: `Compliance=Network`, `Owner=SecOps`, `Env=Prod/Dev`  
+- Đặt chuẩn tên rule/pack để QuickSight lọc framework (SOC2/PCI/HIPAA) dễ dàng
+
+---
+
+### Done? What’s next
+- Quay lại **2.1.7 – Notifications & Reporting** để bắn cảnh báo real-time và dựng báo cáo định kỳ.
