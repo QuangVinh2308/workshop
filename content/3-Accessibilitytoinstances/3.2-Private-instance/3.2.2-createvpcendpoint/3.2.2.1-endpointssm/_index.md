@@ -1,45 +1,49 @@
 ---
-title : "Create Endpoint ssm"
+title : "Create Endpoint SSM"
 date : "`r Sys.Date()`"
 weight : 1
 chapter : false
 pre : " <b> 3.2.2.1 </b> "
 ---
 
+#### Create VPC Endpoint for **SSM** (Interface)
 
-#### Create VPC Endpoint SSM
+> Goal: allow **Session Manager** to work **privately** from instances in **private subnets** (no Internet egress needed), which fits our **Predictive Scaling** baseline.
 
-1. Go to [VPC service management console](https://console.aws.amazon.com/vpc/home)
-  + Click **Endpoints**.
-  + Click **Create endpoint**.
-  
-![Connect](/images/3.connect/005-connect.png)
+1. Go to [VPC Console](https://console.aws.amazon.com/vpc/home)  
+   + **Endpoints** → **Create endpoint**
 
-2. At the **Create endpoint** page.
-  + In the **Name tag** field, enter **SSM**.
-  + In the **Service Category** section, select **AWS Services**.
-  + In the **Service Name** section,
-  + In the **Service category** section, select: **AWS services**
-  + In the **Service Name** section enter: **SSM** then select **Service Name: com.amazonaws.ap-southeast-1.ssm**.
+![Connect](/images/3.connect/011-endpoint-create.png)
 
-![Connect](/images/3.connect/006-connect.png)
+2. **Service**  
+   + **Service category**: **AWS services**  
+   + Search and select **Service name**: `com.amazonaws.<region>.ssm` (e.g., `com.amazonaws.ap-southeast-1.ssm`)  
+   + **Type**: **Interface**  
+   + **Enable Private DNS**: **Enabled**
 
-3. In the **Service Name** column, click **com.amazonaws.ap-southeast-1.ssm**.
-  + In the **VPC** section, select **Lab VPC**.
-  + Select the first AZ, then select the **Lab Private Subnet** subnet.
-  
-![Connect](/images/3.connect/007-connect.png)
+![Connect](/images/3.connect/012-endpoint-choose-ssm.png)
 
-4. Scroll down.
-  + In the **Security Group** section, select the Security group **SG VPC Endpoint** that we created earlier.
-  + In the **Policy** section, select **Full access**.
+3. **VPC & Subnets**  
+   + **VPC**: `workshop-ps-vpc`  
+   + **Subnets**: choose **both private subnets** (`ps-private-a`, `ps-private-b`) across two AZs
 
-![Connect](/images/3.connect/008-connect.png)
+![Connect](/images/3.connect/013-endpoint-subnets.png)
 
-5. Scroll down.
-  + Click **Create endpoint**.
+4. **Security group**  
+   + Select **`sg-ssm-endpoints`** (created in 2.1.4)  
+   + This SG should allow **HTTPS 443** **from** `sg-app-asg` only (least privilege)
 
-6. We have created the VPC Interface Endpoint for **SSM**.
+![Connect](/images/3.connect/014-endpoint-sg.png)
 
+5. **Policy**  
+   + For the lab, choose **Full access** (you can restrict later for production)
 
-![Connect](/images/3.connect/011-connect.png)
+![Connect](/images/3.connect/015-endpoint-policy.png)
+
+6. Click **Create endpoint** and wait until **Status = Available**.  
+   Instances in private subnets can now reach SSM **privately** via this endpoint.
+
+![Connect](/images/3.connect/016-endpoint-done.png)
+
+{{% notice tip %}}
+Repeat similar steps for **`ssmmessages`** and **`ec2messages`** endpoints to com
