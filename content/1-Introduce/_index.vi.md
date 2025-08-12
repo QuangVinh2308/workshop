@@ -1,22 +1,37 @@
 ---
-title : "Giới thiệu"
+title : "Introduction"
 date :  "`r Sys.Date()`" 
 weight : 1 
 chapter : false
 pre : " <b> 1. </b> "
 ---
-**Session Manager** là một chức năng nằm trong dịch vụ System Manager của AWS, Session Manager cung cấp khả năng quản lý các máy chủ một cách an toàn mà **không cần mở port SSH, không cần Bastion Host hoặc quản lý SSH key**. 
-Session Manager cũng giúp dễ dàng tuân thủ các chính sách của công ty yêu cầu quyền truy cập có kiểm soát, đảm bảo việc bảo mật nghiêm ngặt và ghi log truy việc truy cập trong khi vẫn cung cấp cho người dùng cuối quyền truy cập đa nền tảng.
+Predictive Scaling in Amazon EC2 Auto Scaling uses machine learning models to forecast future capacity needs and automatically scale out before traffic surges and scale in during low demand — without manual guesswork or static schedules. This ensures you meet performance targets during peak hours while optimizing costs when traffic drops.
 
-Với việc sử dụng Session Manager, bạn sẽ có được những ưu điểm sau:
+By using Predictive Scaling, you gain advantages that traditional scaling methods (pure target tracking, step scaling, or fixed schedules) cannot easily provide:
 
-- Không cần phải mở cổng 22 cho giao thức SSH.
-- Có thể cấu hình để kết nối không cần đi ra ngoài internet.
-- Không cần quản lý private key của server để kết nối SSH.
-- Quản lý tập trung được user bằng việc sử dụng AWS IAM.
-- Truy cập tới server một cách dễ dàng và đơn giản bằng một cú click chuột.
-- Thời gian truy cập nhanh chóng hơn các phương thức truyền thống như SSH.
-- Hỗ trợ nhiều hệ điều hành khác nhau như Linux, Windows, MacOS.
-- Log lại được các phiên kết nối và các câu lệnh đã thực thi trong lúc kết nối tới server.
+No need to “guess” capacity or maintain cron schedules
+ML learns from historical traffic patterns (hourly, daily, seasonal) and forecasts required instance counts — reducing manual tuning.
 
-Với những ưu điểm trên, bạn có thể sử dụng Session Manager thay vì sử dụng kỹ thuật Bastion host giúp chúng ta tiết kiệm được thời gian và chi phí khi quản lý server Bastion.
+Proactive scale-out, avoiding cold starts
+Launches instances before traffic arrives, preventing latency spikes and 5xx errors compared to reactive-only scaling.
+
+Cost optimization based on real demand
+Scales in automatically when idle; combine with Mixed Instances + Spot for lower cost while maintaining buffer capacity.
+
+Centralized policy, permissions, and audit
+Managed via IAM, with full visibility through Scaling Activities, CloudWatch metrics, and CloudTrail — meeting compliance requirements.
+
+Quick setup with a few clicks or API calls
+Enable Predictive Scaling directly on an ASG, select the right metric (e.g., ALB RequestCountPerTarget), and configure warm-up/cooldown.
+
+Faster response than reactive-only scaling
+No longer fully dependent on alarm latency and cooldown periods — ML predictions ensure smoother performance.
+
+Supports diverse workload patterns
+Ideal for web/app workloads, daytime batch jobs, cyclic traffic (daily/weekly), marketing campaigns, or live events.
+
+Full logging and traceability
+Every scaling decision (forecast, capacity, timestamp) is recorded for analysis and optimization.
+
+With these benefits, Predictive Scaling can replace most manual scheduled scaling and reduce the need for temporary alarm threshold adjustments during campaigns. The result: more stable performance, less operational effort, and cost savings — all while meeting your SLA.
+
