@@ -46,3 +46,5 @@ We’ll create an **S3 Gateway Endpoint** so instances in **private subnets** ca
     }
   ]
 }
+```
+{{% /notice %}}
